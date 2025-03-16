@@ -12,9 +12,9 @@ gpt_service = ChatGPTService()
 
 async def handle_gpt_response(message: types.Message, tone: str = None):
     if tone:
-        gpt_service.add_user_message(tone)
+        gpt_service.add_message(tone)
     else:
-        gpt_service.add_user_message(message.text)
+        gpt_service.add_message(message.text)
 
     try:
         response = gpt_service.get_response()

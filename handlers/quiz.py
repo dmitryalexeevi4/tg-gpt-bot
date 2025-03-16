@@ -11,7 +11,7 @@ gpt_service = ChatGPTService()
 
 
 async def start_quiz_theme(call: types.CallbackQuery, theme_description: str):
-    gpt_service.add_user_message(theme_description)
+    gpt_service.add_message(theme_description)
     try:
         response = gpt_service.get_response()
         await call.message.answer(response, reply_markup=quiz_inner_kb)
@@ -51,7 +51,7 @@ async def callback_change_theme(call: types.CallbackQuery):
 
 @router.message()
 async def handle_message(message: types.Message):
-    gpt_service.add_user_message(message.text)
+    gpt_service.add_message(message.text)
     try:
         response = gpt_service.get_response()
         await message.answer(response, reply_markup=quiz_inner_kb)

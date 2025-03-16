@@ -18,7 +18,7 @@ async def command_gpt(message: types.Message):
 
 @router.message()
 async def handle_message(message: types.Message):
-    gpt_service.add_user_message(message.text)
+    gpt_service.add_message(message.text)
 
     response = gpt_service.get_response()
     await message.answer(response)
