@@ -7,12 +7,11 @@ talk_button = types.KeyboardButton(text='/talk')
 quiz_button = types.KeyboardButton(text='/quiz')
 # translate_button = types.KeyboardButton(text='/translate')
 # recommend_button = types.KeyboardButton(text='/recommend')
-stop_button = types.KeyboardButton(text='/stop')
 
 main_keyboard_list = [
     [start_button, random_button],
     [gpt_button, talk_button],
-    [quiz_button, stop_button]
+    [quiz_button]
 ]
 
 inline_random_kb_list = [
@@ -33,7 +32,18 @@ inline_quiz_kb_list = [
 ]
 
 inline_quiz_inner_kb_list = [
+    [types.InlineKeyboardButton(text="Еще вопрос", callback_data='one_more')],
     [types.InlineKeyboardButton(text="Сменить тему", callback_data='change_theme')],
+    [types.InlineKeyboardButton(text="Закончить", callback_data='callback_stop')]
+]
+
+inline_translate_kb_list = [
+    [types.InlineKeyboardButton(text="Английский", callback_data='english')],
+    [types.InlineKeyboardButton(text="Испанский", callback_data='spanish')]
+]
+
+inline_translate_inner_kb_list = [
+    [types.InlineKeyboardButton(text="Сменить язык", callback_data='change_language')],
     [types.InlineKeyboardButton(text="Закончить", callback_data='callback_stop')]
 ]
 
@@ -44,3 +54,5 @@ random_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_random_kb_list)
 talk_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_talk_kb_list)
 quiz_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_quiz_kb_list)
 quiz_inner_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_quiz_inner_kb_list)
+translate_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_translate_kb_list)
+translate_inner_kb = types.InlineKeyboardMarkup(inline_keyboard=inline_translate_inner_kb_list)

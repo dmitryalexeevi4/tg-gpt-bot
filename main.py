@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 
 import config
-from handlers import common, gpt_chat, talk, quiz, random
+from handlers import common, gpt_chat, random
 
 TOKEN_API = config.TOKEN_TG
 
@@ -20,8 +20,6 @@ async def main():
     dp.include_router(common.router)
     dp.include_router(random.router)
     dp.include_router(gpt_chat.router)
-    dp.include_router(talk.router)
-    dp.include_router(quiz.router)
 
     await dp.start_polling(tg_bot)
 
