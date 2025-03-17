@@ -5,13 +5,13 @@ random_button = types.KeyboardButton(text='/random')
 gpt_button = types.KeyboardButton(text='/gpt')
 talk_button = types.KeyboardButton(text='/talk')
 quiz_button = types.KeyboardButton(text='/quiz')
-# translate_button = types.KeyboardButton(text='/translate')
+translate_button = types.KeyboardButton(text='/translate')
 # recommend_button = types.KeyboardButton(text='/recommend')
 
 main_keyboard_list = [
     [start_button, random_button],
     [gpt_button, talk_button],
-    [quiz_button]
+    [quiz_button, translate_button]
 ]
 
 inline_random_kb_list = [
@@ -38,8 +38,8 @@ inline_quiz_inner_kb_list = [
 ]
 
 inline_translate_kb_list = [
-    [types.InlineKeyboardButton(text="Английский", callback_data='english')],
-    [types.InlineKeyboardButton(text="Испанский", callback_data='spanish')]
+    [types.InlineKeyboardButton(text="Английский", callback_data='Английский')],
+    [types.InlineKeyboardButton(text="Испанский", callback_data='Испанский')]
 ]
 
 inline_translate_inner_kb_list = [
