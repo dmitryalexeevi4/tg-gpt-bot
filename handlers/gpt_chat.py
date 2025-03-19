@@ -18,6 +18,7 @@ class StateForm(StatesGroup):
 
 @router.message(Command('gpt'))
 async def command_gpt(message: types.Message, state: FSMContext):
+    gpt_service.clear_message_history()
     photo = types.FSInputFile("utils/chat_gpt_pic.png")
     await main.tg_bot.send_photo(chat_id=message.chat.id, photo=photo,
                                  caption=f'Привет, {message.chat.first_name}! Введи свой запрос')
@@ -27,6 +28,7 @@ async def command_gpt(message: types.Message, state: FSMContext):
 
 @router.message(Command('talk'))
 async def command_talk(message: types.Message, state: FSMContext):
+    gpt_service.clear_message_history()
     photo = types.FSInputFile("utils/talk_pic.png")
     await main.tg_bot.send_photo(chat_id=message.chat.id, photo=photo, caption="Выберите известную личность:",
                                  reply_markup=talk_kb)
@@ -60,6 +62,7 @@ async def callback_putin_type(call: types.CallbackQuery):
 
 @router.message(Command('quiz'))
 async def command_quiz(message: types.Message, state: FSMContext):
+    gpt_service.clear_message_history()
     photo = types.FSInputFile("utils/quiz_pic.png")
     await main.tg_bot.send_photo(chat_id=message.chat.id, photo=photo, caption="Выберите тему для квиза:",
                                  reply_markup=quiz_kb)

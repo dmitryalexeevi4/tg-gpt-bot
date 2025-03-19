@@ -26,7 +26,7 @@ async def command_translate(message: types.Message, state: FSMContext):
 @router.callback_query(Translator.language)
 async def language_chosen(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(language=callback.data)
-    await callback.message.answer("Введите текст на русском языке:")
+    await callback.message.answer("Введите текст для перевода:")
     await state.set_state(Translator.text)
     await callback.answer()
 

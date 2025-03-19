@@ -26,3 +26,6 @@ class ChatGPTService:
         self.add_message(reply)
 
         return reply
+
+    def clear_message_history(self):
+        self.message_history.clear()

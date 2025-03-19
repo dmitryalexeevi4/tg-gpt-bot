@@ -20,3 +20,4 @@ async def command_start(message: types.Message):
 async def callback_stop_func(call: types.CallbackQuery, state: FSMContext):
     await call.message.answer('Хорошо, возвращаемся в меню бота!', reply_markup=main_kb)
     await state.clear()
+    gpt_service.clear_message_history()
