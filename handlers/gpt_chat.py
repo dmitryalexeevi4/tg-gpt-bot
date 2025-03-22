@@ -2,9 +2,10 @@ from aiogram import Router, types, F
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from openai import BadRequestError
 
 import main
-from keyboards.keyboards import talk_kb, stop_kb, quiz_kb, quiz_inner_kb
+from keyboards.keyboards import talk_kb, stop_kb, quiz_kb, quiz_inner_kb, translate_inner_kb, translate_kb, main_kb
 from utils.gpt_service import ChatGPTService
 
 router = Router()
@@ -16,6 +17,16 @@ class StateForm(StatesGroup):
     name = State()
 
 
+class Translator(StatesGroup):
+    language = State()
+    text = State()
+
+
+'''
+Команда /gpt
+'''
+
+
 @router.message(Command('gpt'))
 async def command_gpt(message: types.Message, state: FSMContext):
     gpt_service.clear_message_history()
@@ -24,6 +35,11 @@ async def command_gpt(message: types.Message, state: FSMContext):
                                  caption=f'Привет, {message.chat.first_name}! Введи свой запрос')
     await state.set_state(StateForm.name)
     await state.update_data(name='gpt')
+
+
+'''
+Команда /talk
+'''
 
 
 @router.message(Command('talk'))
@@ -58,6 +74,11 @@ async def callback_putin_type(call: types.CallbackQuery):
         "Отвечай мне с лёгкостью, теплотой и капелькой искры! Представься именем Анна")
     response = gpt_service.get_response()
     await call.message.answer(response, reply_markup=stop_kb)
+
+
+'''
+Команда /quiz
+'''
 
 
 @router.message(Command('quiz'))
@@ -108,16 +129,91 @@ async def callback_change_theme(call: types.CallbackQuery):
     await call.message.answer('Хорошо, давайте сменим тему!', reply_markup=quiz_kb)
 
 
+'''
+Команда /translate
+'''
+
+
+@router.message(Command("translate"))
+async def command_translate(message: types.Message, state: FSMContext):
+    gpt_service.clear_message_history()
+    await message.answer("Выберите язык для перевода:", reply_markup=translate_kb)
+    await state.set_state(StateForm.name)
+    await state.update_data(name='translate')
+    await state.set_state(Translator.language)
+    await state.update_data()
+
+
+@router.callback_query(Translator.language)
+async def language_chosen(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(language=callback.data)
+    await callback.message.answer("Введите текст для перевода:")
+    await state.set_state(Translator.text)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "change_language")
+async def callback_change_language(call: types.CallbackQuery):
+    await call.message.answer('Хорошо, давайте сменим язык!', reply_markup=translate_kb)
+
+
+@router.callback_query(F.data == "Английский")
+async def callback_eng(call: types.CallbackQuery, state: FSMContext):
+    await language_chosen(call, state)
+
+
+@router.callback_query(F.data == "Испанский")
+async def callback_esp(call: types.CallbackQuery, state: FSMContext):
+    await language_chosen(call, state)
+
+
+@router.message(Translator.text)
+async def text_chosen(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    language = user_data.get("language")
+    text = message.text
+
+    if message.content_type == 'text':
+        gpt_service.add_message(
+            f'Выведи текст \'{text}\' на \'{language}\' язык"')
+        response = gpt_service.get_response()
+        await message.answer(response, reply_markup=translate_inner_kb)
+    else:
+        await message.answer(
+            "Отсутствует реализация обработки файлов/голосовых сообщений, используйте текст! Возвращаемся в меню бота..",
+            reply_markup=main_kb)
+        await state.clear()
+        gpt_service.clear_message_history()
+
+
+'''
+Обработчик сообщений
+'''
+
+
 @router.message()
 async def handle_message(message: types.Message, state: FSMContext):
-    gpt_service.add_message(message.text)
-    response = gpt_service.get_response()
-
     data = await state.get_data()
 
-    if message.text == 'gpt' or data['name'] == 'gpt':
-        await message.answer(response)
-    elif message.text == 'talk' or data['name'] == 'talk':
-        await message.answer(response, reply_markup=stop_kb)
-    elif message.text == 'quiz' or data['name'] == 'quiz':
-        await message.answer(response, reply_markup=quiz_inner_kb)
+    if len(data) == 0:
+        await message.answer("Выберите кнопку в меню/на сообщении!")
+    else:
+        gpt_service.add_message(message.text)
+        response = None
+        try:
+            response = gpt_service.get_response()
+        except BadRequestError:
+            await message.answer(
+                "Отсутствует реализация обработки файлов/голосовых сообщений, используйте текст! Возвращаемся в меню бота..",
+                reply_markup=main_kb)
+            await state.clear()
+            gpt_service.clear_message_history()
+
+        if message.text == 'gpt' or data['name'] == 'gpt':
+            await message.answer(response)
+        elif message.text == 'talk' or data['name'] == 'talk':
+            await message.answer(response, reply_markup=stop_kb)
+        elif message.text == 'quiz' or data['name'] == 'quiz':
+            await message.answer(response, reply_markup=quiz_inner_kb)
+        elif message.text == 'translate' or data['name'] == 'translate':
+            await message.answer(response, reply_markup=translate_inner_kb)
