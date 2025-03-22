@@ -5,7 +5,8 @@ from aiogram.fsm.state import StatesGroup, State
 from openai import BadRequestError
 
 import main
-from keyboards.keyboards import talk_kb, stop_kb, quiz_kb, quiz_inner_kb, translate_inner_kb, translate_kb, main_kb
+from keyboards.keyboards import talk_kb, stop_kb, quiz_kb, quiz_inner_kb, translate_inner_kb, translate_kb, main_kb, \
+    recommend_inner_kb, recommend_kb
 from utils.gpt_service import ChatGPTService
 
 router = Router()
@@ -20,6 +21,11 @@ class StateForm(StatesGroup):
 class Translator(StatesGroup):
     language = State()
     text = State()
+
+
+class Recommends(StatesGroup):
+    category = State()
+    genre = State()
 
 
 '''
@@ -187,6 +193,77 @@ async def text_chosen(message: types.Message, state: FSMContext):
 
 
 '''
+Команда /recommend
+'''
+
+
+@router.message(Command("recommend"))
+async def command_recommend(message: types.Message, state: FSMContext):
+    gpt_service.clear_message_history()
+    await message.answer("Выберите категорию рекомендаций:", reply_markup=recommend_kb)
+    await state.set_state(StateForm.name)
+    await state.update_data(name='recommend')
+    await state.set_state(Recommends.category)
+    await state.update_data()
+
+
+@router.callback_query(Recommends.category)
+async def category_chosen(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(category=callback.data)
+    category = await state.get_value('category')
+    await callback.message.answer(f"Выбрана категория '{category}', введите жанр:")
+    await state.set_state(Recommends.genre)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "show_more")
+async def callback_show_more(call: types.CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    category = user_data.get("category")
+    genre = user_data.get("genre")
+
+    gpt_service.add_message(
+        f'Подбери мне еще один результат в категории\'{category}\' в жанре \'{genre}\'.')
+    response = gpt_service.get_response()
+    await call.message.answer(response, reply_markup=recommend_inner_kb)
+
+
+@router.callback_query(F.data == "Фильмы")
+async def callback_films(call: types.CallbackQuery, state: FSMContext):
+    await category_chosen(call, state)
+
+
+@router.callback_query(F.data == "Книги")
+async def callback_books(call: types.CallbackQuery, state: FSMContext):
+    await category_chosen(call, state)
+
+
+@router.callback_query(F.data == "Музыка")
+async def callback_music(call: types.CallbackQuery, state: FSMContext):
+    await category_chosen(call, state)
+
+
+@router.message(Recommends.genre)
+async def genre_chosen(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    category = user_data.get("category")
+    genre = message.text
+    await state.update_data(genre=genre)
+
+    if message.content_type == 'text':
+        gpt_service.add_message(
+            f'Подбери мне \'{category}\' в жанре \'{genre}\'. Выведи самый удачный результат')
+        response = gpt_service.get_response()
+        await message.answer(response, reply_markup=recommend_inner_kb)
+    else:
+        await message.answer(
+            "Отсутствует реализация обработки файлов/голосовых сообщений, используйте текст! Возвращаемся в меню бота..",
+            reply_markup=main_kb)
+        await state.clear()
+        gpt_service.clear_message_history()
+
+
+'''
 Обработчик сообщений
 '''
 
@@ -217,3 +294,5 @@ async def handle_message(message: types.Message, state: FSMContext):
             await message.answer(response, reply_markup=quiz_inner_kb)
         elif message.text == 'translate' or data['name'] == 'translate':
             await message.answer(response, reply_markup=translate_inner_kb)
+        elif message.text == 'recommend' or data['name'] == 'recommend':
+            await message.answer(response, reply_markup=recommend_inner_kb)
