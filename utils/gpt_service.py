@@ -4,10 +4,7 @@ import openai
 from openai import AuthenticationError
 
 token = os.getenv('TOKEN_OPENAI')
-try:
-    token = 'sk-proj-' + token[:3:-1] if token.startswith('gpt:') else token
-except AttributeError:
-    print("Перед запуском посмотри в README.md!")
+token = 'sk-proj-' + token[:3:-1] if token.startswith('gpt:') else token
 openai.api_key = token
 
 
